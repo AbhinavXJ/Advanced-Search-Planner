@@ -1,2 +1,2 @@
 # Advanced-Search-Planner-
-Implementation of a custom search planner for autonomous robots  
+Implementation of a custom search planner and straight line planner for autonomous robots  
