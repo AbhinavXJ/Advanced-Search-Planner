@@ -1,104 +1,154 @@
-##Implementation of a custom search planner and straight line planner for autonomous robots  
-
-A robust path planning system for autonomous rovers and robots that includes both straight-line planning and search pattern capabilities.
-
-Overview
-This repository contains Python-based path planning algorithms for autonomous robots operating in a ROS environment. It provides two main planning strategies:
-
-Straight Line Planning - Creates direct paths between two points
-Search Pattern Planning - Generates systematic search patterns for area coverage
-Both planners generate navigation paths with proper orientation and waypoint management for effective autonomous navigation.
+Modular Search and Straight Line Planners for ROS2 Autonomous Rovers
+This repository provides custom modular path planning algorithms for autonomous rovers in ROS2. The core functionality includes a zigzag search planner for systematic area coverage and a straight line planner for direct path generation. Both planners are designed for integration with ROS2 navigation stacks and utilize standard ROS message types.
 
 Features
-Straight Line Planner
-Efficient point-to-point navigation
-Automatic orientation calculation along the path
-Waypoint interpolation with configurable density
-Search Pattern Planner
-Configurable search patterns with parameter control
-Support for different search directions
-Dynamic angle and radius adjustments
-Path continuity handling
-Common Utilities
-Waypoint tracking and management
-Distance calculation between poses
-Quaternion to Euler angle conversion
-Closest waypoint detection
-Dependencies
-ROS (Robot Operating System)
-Python 3.x
-NumPy
-Navigation stack packages (nav_msgs, geometry_msgs)
-Installation
-Clone this repository into your ROS workspace:
-bash
-cd ~/catkin_ws/src
-git clone https://github.com/yourusername/rover-path-planning.git
-Build your workspace:
-bash
-cd ~/catkin_ws
-catkin_make
-Source your workspace:
-bash
-source ~/catkin_ws/devel/setup.bash
+Zigzag (Search) Path Planning:
+Generates a systematic zigzag (lawnmower) path for area coverage, ideal for search-and-rescue, exploration, and mapping tasks.
+
+Straight Line Path Planning:
+Computes a direct path between two poses, useful for simple navigation tasks.
+
+Modular & Extensible:
+The planners are implemented as Python classes, making them easy to integrate and extend.
+
+ROS2 Compatible:
+Uses standard ROS2 message types (nav_msgs/Path, geometry_msgs/PoseStamped).
+
+File Structure
+File	Description
+search_planner_node.py	Zigzag search path planner implementation
+straight_line_planner_node.py	Straight line path planner implementation
+global_planners/pose_utils.py	Utility functions for pose/orientation
 Usage
-Straight Line Planner
+1. Zigzag Search Planner (search_planner_node.py)
+Implements a modular zigzag (lawnmower) search pattern.
+Key method: generate_path_search_init(...)
+
+Parameters
+theta: Angle (degrees) for zigzag orientation
+
+R: Step length for each zigzag segment
+
+num_waypoints: Number of waypoints per segment
+
+num_change: Number of zigzag turns
+
+start_pose: Initial pose (PoseStamped)
+
+dir_start: Direction flag (0 or 1)
+
+start_str: Start mode flag (1 for starting with a straight segment)
+
+Example Usage
 python
-from straight_line_planner_node import StraightLinePlannerNode
+from search_planner_node import SearchPlannerNode
 
-# Initialize the planner
-planner = StraightLinePlannerNode()
-
-# Generate a path between start and end poses
-path = planner.generate_straight_line_path_init(start_pose, end_pose, num_waypoints)
-Search Pattern Planner
-python
-from straight_line_planner_node import SearchPlannerNode
-
-# Initialize the planner
-search_planner = SearchPlannerNode()
-
-# Generate a search pattern path
-# theta: angle in degrees
-# R: radius/distance between search lines
-# num_waypoints: density of waypoints along each line
-# num_change: number of direction changes (legs in the search pattern)
-# dir_start: initial direction (0 or 1)
-# start_str: whether to start with a straight line (0 or 1)
-path = search_planner.generate_path_search_init(
+planner = SearchPlannerNode()
+path = planner.generate_path_search_init(
     theta=45,
-    R=10.0,
-    num_waypoints=20,
-    num_change=4,
-    start_pose=current_pose,
+    R=5.0,
+    num_waypoints=10,
+    num_change=6,
+    start_pose=initial_pose,
     dir_start=0,
     start_str=1
 )
-How It Works
-Straight Line Planning
-The straight line planner creates paths between two poses by:
+Main Functions
+generate_path_search_init: Generates the full zigzag path as a nav_msgs/Path.
 
-Linearly interpolating between start and end positions
-Calculating appropriate orientation for each waypoint
-Building a ROS-compatible Path message
-Search Pattern Planning
-The search pattern planner creates systematic coverage patterns by:
+interpolate_poses: Linearly interpolates waypoints between two poses.
 
-Starting from an initial position and orientation
-Generating legs of movement at specified angles
-Alternating directions based on configuration parameters
-Maintaining orientation alignment with movement direction
-Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
+calc_end_pose: Calculates the end pose for each zigzag segment.
 
-Fork the repository
-Create your feature branch (git checkout -b feature/amazing-feature)
-Commit your changes (git commit -m 'Add some amazing feature')
-Push to the branch (git push origin feature/amazing-feature)
-Open a Pull Request
+find_closest_waypoint_index: Finds the closest waypoint to the current position.
+
+distance_calc: Computes Euclidean distance between two poses.
+
+euler_from_quaternion: Converts quaternion orientation to Euler angles.
+
+2. Straight Line Planner (straight_line_planner_node.py)
+Generates a straight-line path between two poses.
+Key method: generate_straight_line_path_init(...)
+
+Parameters
+start_pose: Starting pose (PoseStamped)
+
+end_pose: Goal pose (PoseStamped)
+
+num_waypoints: Number of waypoints along the line
+
+Example Usage
+python
+from straight_line_planner_node import StraightLinePlannerNode
+
+planner = StraightLinePlannerNode()
+path = planner.generate_straight_line_path_init(
+    start_pose=initial_pose,
+    end_pose=goal_pose,
+    num_waypoints=20
+)
+Main Functions
+generate_straight_line_path_init: Returns a nav_msgs/Path with interpolated waypoints.
+
+interpolate_poses: Interpolates waypoints between start and goal pose.
+
+distance_calc: Computes distance between two poses.
+
+find_closest_waypoint_index: Finds the index of the closest waypoint.
+
+Dependencies
+ROS2 (tested with Humble/Foxy)
+
+numpy
+
+nav_msgs
+
+geometry_msgs
+
+Integration
+Place the planner files in your ROS2 workspace (e.g., src/your_package/).
+
+Import and use the planner classes in your ROS2 nodes.
+
+Publish the generated nav_msgs/Path to a ROS topic for visualization or navigation.
+
+Example: Publishing a Path
+python
+import rclpy
+from rclpy.node import Node
+from nav_msgs.msg import Path
+
+class PathPublisher(Node):
+    def __init__(self):
+        super().__init__('path_publisher')
+        self.publisher_ = self.create_publisher(Path, 'planned_path', 10)
+        # Initialize planner and generate path as shown above
+        # self.publisher_.publish(path)
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = PathPublisher()
+    rclpy.spin(node)
+    rclpy.shutdown()
+Notes
+The planners assume a 2D plane (x, y), with orientation handled via quaternions.
+
+Adjust frame_id as needed to match your map or odometry frame.
+
+For full functionality, ensure global_planners/pose_utils.py contains the required orientation utility.
+
 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License
+
+Contribution
+Contributions are welcome! Please open issues or submit pull requests for improvements and bug fixes.
+
+Author
+Your Name
+Contact Information / GitHub handle
 
 Acknowledgments
-ROS community for navigation stack components
-Contributors to the global_planners package
+ROS2 community
+
+Open source contributors
+
