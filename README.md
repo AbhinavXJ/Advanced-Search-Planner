@@ -179,4 +179,3 @@ Contributions are welcome! Please open issues or submit pull requests for improv
 
 ---
 
-**Copy and paste this README into your GitHub repository for clear documentation of your custom modular search and straight line planners for ROS2 autonomous rovers.**
