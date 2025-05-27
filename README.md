@@ -1,4 +1,4 @@
-# Modular Search and Straight Line Planners for ROS2 Autonomous Rovers
+## Modular Search and Straight Line Planners for ROS2 Autonomous Rovers
 
 This repository provides custom modular path planning algorithms for autonomous rovers in ROS2. The core functionality includes a **zigzag search planner** for systematic area coverage and a **straight line planner** for direct path generation. Both planners are designed for integration with ROS2 navigation stacks and utilize standard ROS message types.
 
